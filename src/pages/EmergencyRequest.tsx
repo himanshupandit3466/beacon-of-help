@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import { RequestDetails, RequestStatus } from '@/types/request';
 
 // Map emergency type IDs to their details
 const emergencyMap: Record<string, { title: string; icon: string }> = {
@@ -80,13 +80,13 @@ const EmergencyRequest = () => {
     // In a real app, this would be sent to a server
     setTimeout(() => {
       // Store request details in local storage for demo
-      const requestDetails = {
+      const requestDetails: RequestDetails = {
         id: requestId,
-        type: type,
+        type: type || 'other',
         title: emergencyInfo.title,
         location: location,
         description: description,
-        status: 'searching',
+        status: "searching" as RequestStatus,
         createdAt: new Date().toISOString()
       };
       

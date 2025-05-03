@@ -3,296 +3,319 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, PhoneCall, MessageCircle } from "lucide-react";
-
-// Mock volunteer data for the demo
-const mockVolunteers = [
-  {
-    id: 'v1',
-    name: 'Rahul Singh',
-    distance: '1.2km away',
-    eta: '5 mins',
-    karma: 87,
-    avatar: null
-  },
-  {
-    id: 'v2',
-    name: 'Priya Sharma',
-    distance: '1.8km away',
-    eta: '7 mins',
-    karma: 124,
-    avatar: null
-  }
-];
-
-interface RequestDetails {
-  id: string;
-  type: string;
-  title: string;
-  location: { lat: number; lng: number };
-  description: string;
-  status: 'searching' | 'accepted' | 'completed' | 'canceled';
-  createdAt: string;
-  volunteer?: {
-    id: string;
-    name: string;
-    distance: string;
-    eta: string;
-    karma: number;
-    avatar: string | null;
-  };
-}
+import { ArrowLeft, PhoneCall, MessageCircle, Check, X } from "lucide-react";
+import { RequestDetails, RequestStatus } from '@/types/request';
 
 const RequestTracking = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [requestDetails, setRequestDetails] = useState<RequestDetails | null>(null);
+  const [request, setRequest] = useState<RequestDetails | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (!id) return;
-    
-    // In a real app, this would fetch from an API
-    const storedRequest = localStorage.getItem(`helpin_request_${id}`);
-    
-    if (storedRequest) {
-      setRequestDetails(JSON.parse(storedRequest));
-    }
-    
-    setLoading(false);
-    
-    // Simulate volunteer accepting request after 5 seconds
-    const timer = setTimeout(() => {
+    // In a real app, this would fetch from the database
+    const fetchRequest = () => {
+      const storedRequest = localStorage.getItem(`helpin_request_${id}`);
+      
       if (storedRequest) {
-        const updatedRequest = {
-          ...JSON.parse(storedRequest),
-          status: 'accepted',
-          volunteer: mockVolunteers[0]
-        };
-        
-        localStorage.setItem(`helpin_request_${id}`, JSON.stringify(updatedRequest));
-        setRequestDetails(updatedRequest);
-        
-        toast({
-          title: "Volunteer Found!",
-          description: `${mockVolunteers[0].name} has accepted your request`
-        });
+        const parsedRequest = JSON.parse(storedRequest) as RequestDetails;
+        setRequest(parsedRequest);
       }
-    }, 5000);
+      
+      setLoading(false);
+    };
+    
+    fetchRequest();
+    
+    // For demo, simulate a volunteer accepting the request after 8 seconds
+    const timer = setTimeout(() => {
+      if (!localStorage.getItem(`helpin_request_${id}_accepted`)) {
+        simulateVolunteerAccept();
+      }
+    }, 8000);
     
     return () => clearTimeout(timer);
-  }, [id, toast]);
-
+  }, [id]);
+  
+  const simulateVolunteerAccept = () => {
+    if (request) {
+      // Simulate a volunteer accepting the request
+      const updatedRequest: RequestDetails = {
+        ...request,
+        status: "accepted" as RequestStatus,
+        volunteer: {
+          id: 'v1',
+          name: 'Rahul Sharma',
+          distance: '1.2 km away',
+          eta: '5 minutes',
+          karma: 120,
+          avatar: null
+        }
+      };
+      
+      setRequest(updatedRequest);
+      localStorage.setItem(`helpin_request_${id}`, JSON.stringify(updatedRequest));
+      localStorage.setItem(`helpin_request_${id}_accepted`, 'true');
+      
+      toast({
+        title: "Volunteer Found!",
+        description: "Rahul has accepted your request and is on the way."
+      });
+    }
+  };
+  
   const handleCancelRequest = () => {
-    if (!requestDetails) return;
-    
-    const updatedRequest = {
-      ...requestDetails,
-      status: 'canceled'
-    };
-    
-    localStorage.setItem(`helpin_request_${id}`, JSON.stringify(updatedRequest));
-    setRequestDetails(updatedRequest);
-    
-    toast({
-      title: "Request Canceled",
-      description: "Your help request has been canceled"
-    });
-    
-    // Navigate back to home after brief delay
-    setTimeout(() => navigate('/home'), 1500);
+    if (request) {
+      const updatedRequest: RequestDetails = {
+        ...request,
+        status: "canceled" as RequestStatus
+      };
+      
+      setRequest(updatedRequest);
+      localStorage.setItem(`helpin_request_${id}`, JSON.stringify(updatedRequest));
+      
+      toast({
+        title: "Request Canceled",
+        description: "Your help request has been canceled."
+      });
+      
+      // Navigate back after a short delay
+      setTimeout(() => {
+        navigate('/home');
+      }, 2000);
+    }
   };
-
-  const handleHelpReceived = () => {
-    if (!requestDetails) return;
-    
-    const updatedRequest = {
-      ...requestDetails,
-      status: 'completed'
-    };
-    
-    localStorage.setItem(`helpin_request_${id}`, JSON.stringify(updatedRequest));
-    setRequestDetails(updatedRequest);
-    
-    toast({
-      title: "Help Confirmed",
-      description: "We're glad you received the help you needed"
-    });
-    
-    // Navigate back to home after brief delay
-    setTimeout(() => navigate('/home'), 1500);
+  
+  const handleCompleteRequest = () => {
+    if (request) {
+      const updatedRequest: RequestDetails = {
+        ...request,
+        status: "completed" as RequestStatus
+      };
+      
+      setRequest(updatedRequest);
+      localStorage.setItem(`helpin_request_${id}`, JSON.stringify(updatedRequest));
+      
+      toast({
+        title: "Request Completed",
+        description: "Thank you for using Helpin!"
+      });
+      
+      // Navigate back after a short delay
+      setTimeout(() => {
+        navigate('/home');
+      }, 2000);
+    }
   };
-
-  const handleCall = () => {
-    toast({
-      title: "Calling Volunteer",
-      description: "Your number is private and not shared"
-    });
-  };
-
-  const handleMessage = () => {
-    toast({
-      title: "Messaging Volunteer",
-      description: "Your number is private and not shared"
-    });
-  };
-
+  
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-white">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 bg-gray-200 rounded-full mb-4"></div>
-          <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
-          <div className="h-3 w-24 bg-gray-200 rounded"></div>
-        </div>
-        <p className="mt-4 text-gray-500">Loading request details...</p>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
-
-  if (!requestDetails) {
+  
+  if (!request) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-white p-6">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold mb-2">Request Not Found</h2>
-          <p className="text-gray-500">
-            We couldn't find the help request you're looking for.
-          </p>
-        </div>
-        <Button onClick={() => navigate('/home')}>
-          Return to Home
-        </Button>
+      <div className="flex flex-col items-center justify-center h-screen p-6">
+        <h1 className="text-2xl font-bold mb-4">Request Not Found</h1>
+        <p className="text-gray-500 mb-6">The request you're looking for doesn't exist or has expired.</p>
+        <Button onClick={() => navigate('/home')}>Go Home</Button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-primary text-white p-4 flex items-center">
         <button onClick={() => navigate('/home')} className="mr-3">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-xl font-bold">Help Request</h1>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-bold">Help Request</h1>
+          <span className="text-sm opacity-80">{request.title}</span>
+        </div>
       </div>
       
-      {/* Status Bar */}
-      <div className={`py-3 px-4 text-white text-center font-medium ${
-        requestDetails.status === 'searching' ? 'bg-yellow-500' :
-        requestDetails.status === 'accepted' ? 'bg-green-500' :
-        requestDetails.status === 'completed' ? 'bg-blue-500' :
-        'bg-gray-500'
+      {/* Status */}
+      <div className={`p-4 ${
+        request.status === 'searching' ? 'bg-yellow-50 border-b border-yellow-100' :
+        request.status === 'accepted' ? 'bg-green-50 border-b border-green-100' :
+        request.status === 'completed' ? 'bg-blue-50 border-b border-blue-100' :
+        'bg-red-50 border-b border-red-100'
       }`}>
-        {requestDetails.status === 'searching' && 'Searching for volunteers...'}
-        {requestDetails.status === 'accepted' && 'Volunteer is on the way!'}
-        {requestDetails.status === 'completed' && 'Help request completed'}
-        {requestDetails.status === 'canceled' && 'Help request canceled'}
+        <div className="flex items-center">
+          <span className={`w-3 h-3 rounded-full mr-2 ${
+            request.status === 'searching' ? 'bg-yellow-400 animate-pulse' :
+            request.status === 'accepted' ? 'bg-green-500' :
+            request.status === 'completed' ? 'bg-blue-500' :
+            'bg-red-500'
+          }`}></span>
+          <span className="font-medium">
+            {request.status === 'searching' ? 'Searching for volunteers...' :
+             request.status === 'accepted' ? 'Volunteer found! Help is on the way.' :
+             request.status === 'completed' ? 'Request completed' :
+             'Request canceled'}
+          </span>
+        </div>
       </div>
       
       {/* Content */}
-      <div className="flex-grow p-4">
-        {/* Emergency Type */}
-        <div className="bg-gray-50 border rounded-lg p-4 mb-6">
-          <div className="flex items-center mb-2">
-            <h3 className="font-medium">{requestDetails.title}</h3>
+      <div className="flex-grow p-4 overflow-y-auto">
+        {/* Request Details */}
+        <div className="bg-white rounded-lg border p-4 mb-4">
+          <h2 className="font-semibold mb-2">Request Details</h2>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="text-gray-500">Type:</div>
+            <div>{request.title}</div>
+            
+            <div className="text-gray-500">Time:</div>
+            <div>{new Date(request.createdAt).toLocaleTimeString()}</div>
+            
+            <div className="text-gray-500">Location:</div>
+            <div>Near your current position</div>
+            
+            {request.description && (
+              <>
+                <div className="text-gray-500 col-span-2 mt-2">Description:</div>
+                <div className="col-span-2 bg-gray-50 p-2 rounded">{request.description}</div>
+              </>
+            )}
           </div>
-          {requestDetails.description && (
-            <p className="text-sm text-gray-600">{requestDetails.description}</p>
-          )}
         </div>
         
-        {/* Volunteer Info (if assigned) */}
-        {requestDetails.volunteer && requestDetails.status === 'accepted' && (
-          <div className="border rounded-lg p-4 mb-6">
-            <h3 className="font-medium mb-3">Your Volunteer</h3>
+        {/* Volunteer Details - Only shown when a volunteer has accepted */}
+        {request.status === 'accepted' && request.volunteer && (
+          <div className="bg-white rounded-lg border p-4 mb-4 animate-fadeIn">
+            <h2 className="font-semibold mb-4">Volunteer Details</h2>
             
-            <div className="flex items-center mb-3">
-              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                <span className="text-gray-500 font-medium">{requestDetails.volunteer.name.charAt(0)}</span>
-              </div>
+            <div className="flex items-center mb-4">
+              {request.volunteer.avatar ? (
+                <img 
+                  src={request.volunteer.avatar} 
+                  alt={request.volunteer.name} 
+                  className="w-16 h-16 rounded-full mr-4 object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                  <span className="text-xl font-bold text-primary">
+                    {request.volunteer.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+              
               <div>
-                <h4 className="font-medium">{requestDetails.volunteer.name}</h4>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span className="mr-2">{requestDetails.volunteer.distance}</span>
-                  <span>•</span>
-                  <span className="mx-2">ETA: {requestDetails.volunteer.eta}</span>
-                  <span>•</span>
-                  <span className="ml-2">{requestDetails.volunteer.karma} karma points</span>
+                <h3 className="font-medium">{request.volunteer.name}</h3>
+                <div className="flex items-center text-sm text-gray-500">
+                  <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded mr-2">
+                    {request.volunteer.karma} karma
+                  </span>
+                  <span>Verified Volunteer</span>
+                </div>
+                <div className="flex mt-1 space-x-4">
+                  <div className="text-xs text-gray-500">{request.volunteer.distance}</div>
+                  <div className="text-xs text-gray-500">ETA: {request.volunteer.eta}</div>
                 </div>
               </div>
             </div>
             
-            <div className="flex space-x-2">
+            <div className="grid grid-cols-2 gap-3">
               <Button 
-                variant="secondary" 
-                className="flex-1"
-                onClick={handleCall}
+                variant="outline" 
+                className="flex items-center justify-center"
+                onClick={() => toast({ title: "Feature Coming Soon", description: "Call functionality will be available in the next update" })}
               >
-                <PhoneCall size={16} className="mr-1" />
+                <PhoneCall size={16} className="mr-2" />
                 Call
               </Button>
               <Button 
                 variant="outline" 
-                className="flex-1"
-                onClick={handleMessage}
+                className="flex items-center justify-center"
+                onClick={() => toast({ title: "Feature Coming Soon", description: "Messaging functionality will be available in the next update" })}
               >
-                <MessageCircle size={16} className="mr-1" />
+                <MessageCircle size={16} className="mr-2" />
                 Message
               </Button>
             </div>
           </div>
         )}
         
-        {/* Searching Status */}
-        {requestDetails.status === 'searching' && (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-pulse h-16 w-16 bg-yellow-200 rounded-full mb-4 flex items-center justify-center">
-              <div className="h-10 w-10 bg-yellow-400 rounded-full"></div>
+        {/* Status Timeline - for future implementation */}
+        {request.status === 'accepted' && (
+          <div className="bg-white rounded-lg border p-4 mb-4">
+            <h2 className="font-semibold mb-3">Status Updates</h2>
+            <div className="space-y-4">
+              <div className="flex">
+                <div className="mr-4 relative">
+                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                  <div className="absolute top-4 bottom-0 left-2 -ml-px w-0.5 bg-gray-200"></div>
+                </div>
+                <div>
+                  <p className="font-medium">Request Sent</p>
+                  <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleTimeString()}</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="mr-4 relative">
+                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                  <div className="absolute top-4 bottom-0 left-2 -ml-px w-0.5 bg-gray-200"></div>
+                </div>
+                <div>
+                  <p className="font-medium">Volunteer Accepted</p>
+                  <p className="text-sm text-gray-500">{new Date(new Date(request.createdAt).getTime() + 8000).toLocaleTimeString()}</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="mr-4">
+                  <div className="w-4 h-4 bg-gray-200 rounded-full"></div>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-500">Help Completed</p>
+                  <p className="text-sm text-gray-500">Pending...</p>
+                </div>
+              </div>
             </div>
-            <h3 className="font-medium mb-1">Looking for nearby volunteers</h3>
-            <p className="text-sm text-gray-500">
-              We're notifying verified volunteers in your area
-            </p>
           </div>
         )}
-        
-        {/* Action buttons based on status */}
-        {requestDetails.status === 'searching' && (
+      </div>
+      
+      {/* Actions Footer */}
+      <div className="p-4 bg-white border-t">
+        {request.status === 'searching' && (
           <Button 
             variant="outline" 
-            className="w-full mb-4 border-red-300 text-red-600 hover:bg-red-50"
+            className="w-full" 
             onClick={handleCancelRequest}
           >
+            <X size={18} className="mr-2" />
             Cancel Request
           </Button>
         )}
         
-        {requestDetails.status === 'accepted' && (
+        {request.status === 'accepted' && (
           <Button 
-            className="w-full mb-4 bg-green-500 hover:bg-green-600"
-            onClick={handleHelpReceived}
+            className="w-full" 
+            onClick={handleCompleteRequest}
           >
-            I've Received Help
+            <Check size={18} className="mr-2" />
+            Mark as Completed
           </Button>
         )}
         
-        {(requestDetails.status === 'completed' || requestDetails.status === 'canceled') && (
+        {(request.status === 'completed' || request.status === 'canceled') && (
           <Button 
-            className="w-full mb-4"
+            className="w-full" 
             onClick={() => navigate('/home')}
           >
             Return to Home
           </Button>
         )}
-      </div>
-      
-      {/* Emergency Services Note */}
-      <div className="bg-yellow-50 p-4 border-t border-yellow-100">
-        <p className="text-sm text-yellow-700 text-center">
-          <span className="font-bold">Remember:</span> For critical emergencies, please also contact professional emergency services.
-        </p>
       </div>
     </div>
   );
