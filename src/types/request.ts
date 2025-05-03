@@ -12,6 +12,8 @@ export interface Profile {
   photo_url: string | null;
   is_verified: boolean;
   last_location?: Location;
+  karma_points?: number;  // Added for volunteer points
+  is_volunteer?: boolean; // Added to distinguish volunteers
 }
 
 export interface EmergencyContact {
@@ -41,4 +43,5 @@ export interface RequestDetails {
   createdAt: string;
   status: RequestStatus;
   volunteer?: Volunteer;
+  accepted_count?: number; // Added to track number of volunteers who accepted
 }

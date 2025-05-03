@@ -4,7 +4,7 @@ import { Profile } from '@/types/request';
 
 // Mock function to simulate DigiLocker verification
 // In a real app, this would integrate with the DigiLocker API
-export const verifyWithDigiLocker = async (aadhaarNumber: string): Promise<Partial<Profile>> => {
+export const verifyWithDigiLocker = async (aadhaarNumber: string, isVolunteer: boolean = false): Promise<Partial<Profile>> => {
   // Simulate API call delay
   await new Promise((resolve) => setTimeout(resolve, 1500));
   
@@ -14,7 +14,9 @@ export const verifyWithDigiLocker = async (aadhaarNumber: string): Promise<Parti
     dob: new Date(1990, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
     aadhaar_number: aadhaarNumber,
     photo_url: null,
-    is_verified: true
+    is_verified: true,
+    is_volunteer: isVolunteer,
+    karma_points: isVolunteer ? 0 : undefined
   };
   
   return mockData;
