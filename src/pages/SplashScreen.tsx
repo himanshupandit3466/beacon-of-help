@@ -2,12 +2,17 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/contexts/AuthContext';
 
 const SplashScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
+    // Don't do anything while auth is loading
+    if (loading) return;
+
     // Check if user has accepted terms before
     const hasAcceptedTerms = localStorage.getItem('helpin_terms_accepted');
     
@@ -15,8 +20,7 @@ const SplashScreen = () => {
     const timer = setTimeout(() => {
       if (hasAcceptedTerms === 'true') {
         // Check if user is logged in
-        const isLoggedIn = localStorage.getItem('helpin_user');
-        if (isLoggedIn) {
+        if (user) {
           navigate('/home');
         } else {
           navigate('/login');
@@ -27,7 +31,7 @@ const SplashScreen = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, user, loading]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white">

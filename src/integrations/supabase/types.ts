@@ -9,13 +9,126 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      emergency_contacts: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          phone_number: string
+          relationship: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          phone_number: string
+          relationship?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          phone_number?: string
+          relationship?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      help_requests: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          location: unknown
+          status: string | null
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location: unknown
+          status?: string | null
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: unknown
+          status?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          aadhaar_number: string | null
+          created_at: string | null
+          dob: string | null
+          full_name: string | null
+          id: string
+          is_verified: boolean | null
+          photo_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aadhaar_number?: string | null
+          created_at?: string | null
+          dob?: string | null
+          full_name?: string | null
+          id: string
+          is_verified?: boolean | null
+          photo_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aadhaar_number?: string | null
+          created_at?: string | null
+          dob?: string | null
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean | null
+          photo_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      find_nearby_volunteers: {
+        Args: { request_id: string; max_distance_km?: number }
+        Returns: {
+          aadhaar_number: string | null
+          created_at: string | null
+          dob: string | null
+          full_name: string | null
+          id: string
+          is_verified: boolean | null
+          photo_url: string | null
+          updated_at: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
