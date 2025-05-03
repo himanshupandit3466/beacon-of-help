@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Location, RequestDetails } from '@/types/request';
+import { Location, RequestDetails, RequestStatus, Volunteer } from '@/types/request';
 
 // Create a new help request
 export const createHelpRequest = async (
@@ -40,7 +40,7 @@ export const createHelpRequest = async (
       type,
       description,
       location: pointLocation,
-      status: 'searching'
+      status: 'searching' as RequestStatus
     })
     .select()
     .single();
@@ -57,7 +57,7 @@ export const createHelpRequest = async (
     location,
     description: data.description || '',
     createdAt: data.created_at,
-    status: data.status,
+    status: data.status as RequestStatus,
   };
   
   // Notify emergency contacts (would be implemented in a real app)
@@ -108,22 +108,29 @@ export const getHelpRequestDetails = async (requestId: string): Promise<RequestD
   
   const title = emergencyTypes[data.type]?.title || 'Emergency';
   
-  // Parse location from PostgreSQL POINT format
-  const locationMatch = data.location.match(/\((.+),(.+)\)/);
-  const location = locationMatch 
-    ? { lng: parseFloat(locationMatch[1]), lat: parseFloat(locationMatch[2]) } 
-    : { lat: 0, lng: 0 };
+  // Parse location from PostgreSQL POINT format - safely handle unknown type
+  let location: Location = { lat: 0, lng: 0 };
+  if (typeof data.location === 'string') {
+    const locationMatch = data.location.match(/\((.+),(.+)\)/);
+    if (locationMatch) {
+      location = { 
+        lng: parseFloat(locationMatch[1]), 
+        lat: parseFloat(locationMatch[2]) 
+      };
+    }
+  }
   
   // Create volunteer data if request was accepted
-  let volunteer = undefined;
+  let volunteer: Volunteer | undefined = undefined;
   if (data.accepted_by && data.profiles) {
+    const profile = data.profiles as any; // Use type assertion for the joined data
     volunteer = {
       id: data.accepted_by,
-      name: data.profiles.full_name || 'Volunteer',
+      name: profile.full_name || 'Volunteer',
       distance: '1.2 km away', // Would be calculated in a real app
       eta: '5 minutes', // Would be calculated in a real app
       karma: 120, // Would be fetched in a real app
-      avatar: data.profiles.photo_url
+      avatar: profile.photo_url
     };
   }
   
@@ -134,7 +141,7 @@ export const getHelpRequestDetails = async (requestId: string): Promise<RequestD
     location,
     description: data.description || '',
     createdAt: data.created_at,
-    status: data.status,
+    status: data.status as RequestStatus,
     volunteer
   };
 };
@@ -142,7 +149,7 @@ export const getHelpRequestDetails = async (requestId: string): Promise<RequestD
 // Update help request status
 export const updateHelpRequestStatus = async (
   requestId: string, 
-  status: 'searching' | 'accepted' | 'completed' | 'canceled'
+  status: RequestStatus
 ): Promise<void> => {
   const { error } = await supabase
     .from('help_requests')
@@ -165,7 +172,7 @@ export const acceptHelpRequest = async (requestId: string): Promise<void> => {
   const { error } = await supabase
     .from('help_requests')
     .update({ 
-      status: 'accepted',
+      status: 'accepted' as RequestStatus,
       accepted_by: user.id,
       accepted_at: new Date().toISOString()
     })

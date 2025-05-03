@@ -77,10 +77,11 @@ const VerifyOTP = () => {
     
     try {
       // Verify OTP with Supabase
+      // Updated to use the correct parameter types
       const { data, error } = await supabase.auth.verifyOtp({
         phone: phoneNumber,
         token: otpValue,
-        type: isSignup ? 'signup' : 'sms'
+        type: "sms"
       });
       
       if (error) throw error;

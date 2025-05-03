@@ -45,8 +45,8 @@ const Signup = () => {
         ? phoneNumber 
         : `+91${phoneNumber}`; // Assuming India country code
       
-      // Sign up with phone number
-      const { data, error } = await supabase.auth.signUp({
+      // Send OTP to phone number (not creating account yet)
+      const { error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
           data: {

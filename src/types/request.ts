@@ -11,6 +11,7 @@ export interface Profile {
   aadhaar_number: string | null;
   photo_url: string | null;
   is_verified: boolean;
+  last_location?: Location;
 }
 
 export interface EmergencyContact {
