@@ -32,7 +32,7 @@ export const getNearbyRequests = async (maxDistance: number = 5): Promise<Reques
       status,
       created_at,
       accepted_by,
-      (SELECT count(*) FROM help_request_acceptances WHERE help_request_id = help_requests.id) as accepted_count
+      accepted_count:help_request_acceptances(count)
     `)
     .eq('status', 'searching')
     .not('user_id', 'eq', user.id); // Exclude user's own requests
@@ -70,8 +70,8 @@ export const getNearbyRequests = async (maxDistance: number = 5): Promise<Reques
     } else if (item.location) {
       // If location is already parsed as an object with point format
       location = {
-        lng: item.location[0], 
-        lat: item.location[1]
+        lng: parseFloat(item.location[0]), 
+        lat: parseFloat(item.location[1]) 
       };
     }
     
@@ -80,6 +80,13 @@ export const getNearbyRequests = async (maxDistance: number = 5): Promise<Reques
     const distance = `${(Math.random() * (maxDistance - 0.1) + 0.1).toFixed(1)} km away`;
     
     const title = emergencyTypes[item.type]?.title || 'Emergency';
+    
+    // Get the count of acceptances
+    const accepted_count = typeof item.accepted_count === 'number' 
+      ? item.accepted_count 
+      : Array.isArray(item.accepted_count) 
+        ? item.accepted_count.length 
+        : 0;
     
     return {
       id: item.id,
@@ -90,7 +97,7 @@ export const getNearbyRequests = async (maxDistance: number = 5): Promise<Reques
       createdAt: item.created_at,
       status: item.status as RequestStatus,
       distance,
-      accepted_count: item.accepted_count || 0
+      accepted_count
     };
   }) || [];
   
