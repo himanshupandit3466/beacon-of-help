@@ -67,6 +67,12 @@ export const getNearbyRequests = async (maxDistance: number = 5): Promise<Reques
           lat: parseFloat(locationMatch[2]) 
         };
       }
+    } else if (item.location) {
+      // If location is already parsed as an object with point format
+      location = {
+        lng: item.location[0], 
+        lat: item.location[1]
+      };
     }
     
     // Calculate distance - in a real app, use a proper distance calculation

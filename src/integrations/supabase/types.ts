@@ -120,6 +120,7 @@ export type Database = {
           last_location: unknown | null
           photo_url: string | null
           updated_at: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
         }
         Insert: {
           aadhaar_number?: string | null
@@ -133,6 +134,7 @@ export type Database = {
           last_location?: unknown | null
           photo_url?: string | null
           updated_at?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Update: {
           aadhaar_number?: string | null
@@ -146,6 +148,7 @@ export type Database = {
           last_location?: unknown | null
           photo_url?: string | null
           updated_at?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Relationships: []
       }
@@ -168,15 +171,21 @@ export type Database = {
           last_location: unknown | null
           photo_url: string | null
           updated_at: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
         }[]
       }
       increment_karma_points: {
         Args: { user_id: string; points: number }
         Returns: undefined
       }
+      update_last_location: {
+        Args: { user_id: string; lat: number; lng: number }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      request_status: "searching" | "accepted" | "completed" | "canceled"
+      user_type: "user" | "volunteer" | "both"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -291,6 +300,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      request_status: ["searching", "accepted", "completed", "canceled"],
+      user_type: ["user", "volunteer", "both"],
+    },
   },
 } as const
