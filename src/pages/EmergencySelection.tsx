@@ -36,18 +36,6 @@ const emergencyTypes = [
     description: 'Medical crisis requiring immediate attention'
   },
   {
-    id: 'crime',
-    title: 'Crime Witness / Need Police',
-    icon: '🚔',
-    description: 'Witnessed a crime or need police assistance'
-  },
-  {
-    id: 'electric',
-    title: 'Electric Shock / Short Circuit',
-    icon: '⚡',
-    description: 'Electrical emergencies'
-  },
-  {
     id: 'vehicle',
     title: 'Vehicle Breakdown',
     icon: '🚙',
@@ -79,7 +67,7 @@ const EmergencySelection = () => {
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
       <div className="bg-primary text-white p-4 flex items-center">
-        <button onClick={() => navigate('/home')} className="mr-3">
+        <button onClick={() => navigate('/home')} className="mr-3" aria-label="Back">
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-xl font-bold">Select Emergency Type</h1>
@@ -97,8 +85,9 @@ const EmergencySelection = () => {
               key={emergency.id}
               onClick={() => handleEmergencySelect(emergency.id)}
               className="flex flex-col items-center border rounded-lg p-4 transition-colors hover:bg-gray-50 active:bg-gray-100"
+              aria-label={`Select ${emergency.title}`}
             >
-              <span className="text-3xl mb-2">{emergency.icon}</span>
+              <span className="text-3xl mb-2" role="img" aria-label={emergency.title}>{emergency.icon}</span>
               <h3 className="font-medium text-center">{emergency.title}</h3>
               <p className="text-xs text-gray-500 text-center mt-1">
                 {emergency.description}

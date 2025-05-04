@@ -16,7 +16,7 @@ const SplashScreen = () => {
     // Check if user has accepted terms before
     const hasAcceptedTerms = localStorage.getItem('helpin_terms_accepted');
     
-    // After 2 seconds, navigate to terms or home
+    // After 2 seconds, navigate to terms or login/home
     const timer = setTimeout(() => {
       if (hasAcceptedTerms === 'true') {
         // Check if user is logged in

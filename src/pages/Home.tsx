@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -47,7 +46,7 @@ const Home = () => {
           </div>
         </div>
         
-        {/* Main content */}
+        {/* Main content - Big Help Button in center */}
         <div className="flex-grow flex flex-col items-center justify-center p-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Welcome, {userName}</h2>
@@ -56,10 +55,11 @@ const Home = () => {
             </p>
           </div>
           
-          {/* Emergency help button */}
+          {/* Emergency help button - Big and centered */}
           <button 
             onClick={handleEmergencyHelp}
             className="help-button w-48 h-48 mb-8 flex items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+            aria-label="Emergency help button"
           >
             <div className="flex flex-col items-center">
               <HelpCircle size={64} />
