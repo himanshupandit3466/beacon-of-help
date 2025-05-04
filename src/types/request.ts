@@ -44,4 +44,5 @@ export interface RequestDetails {
   status: RequestStatus;
   volunteer?: Volunteer;
   accepted_count?: number; // Added to track number of volunteers who accepted
+  distance?: string; // Added for volunteer dashboard display
 }

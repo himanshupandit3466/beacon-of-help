@@ -35,8 +35,7 @@ export const getNearbyRequests = async (maxDistance: number = 5): Promise<Reques
       (SELECT count(*) FROM help_request_acceptances WHERE help_request_id = help_requests.id) as accepted_count
     `)
     .eq('status', 'searching')
-    .not('user_id', 'eq', user.id) // Exclude user's own requests
-    .order('created_at', { ascending: false });
+    .not('user_id', 'eq', user.id); // Exclude user's own requests
     
   if (error) {
     throw new Error(error.message);
@@ -116,16 +115,21 @@ export const acceptHelpRequest = async (requestId: string): Promise<void> => {
   }
   
   // Record the acceptance in help_request_acceptances table
-  const { error: acceptError } = await supabase
-    .from('help_request_acceptances')
-    .insert({
-      help_request_id: requestId,
-      volunteer_id: user.id,
-      accepted_at: new Date().toISOString()
-    });
-    
-  if (acceptError) {
-    console.error('Failed to record acceptance', acceptError);
+  try {
+    const { error: acceptError } = await supabase
+      .from('help_request_acceptances')
+      .insert({
+        help_request_id: requestId,
+        volunteer_id: user.id,
+        accepted_at: new Date().toISOString()
+      });
+      
+    if (acceptError) {
+      console.error('Failed to record acceptance', acceptError);
+      // Continue anyway, the primary update succeeded
+    }
+  } catch (error) {
+    console.error('Error recording acceptance', error);
     // Continue anyway, the primary update succeeded
   }
 };
@@ -154,14 +158,19 @@ export const completeHelpRequest = async (requestId: string): Promise<void> => {
   // Award karma points to the volunteer
   const karmaPoints = 10; // Default karma points per help
   
-  // Update volunteer's karma points
-  const { error: karmaError } = await supabase.rpc('increment_karma_points', {
-    user_id: user.id,
-    points: karmaPoints
-  });
-  
-  if (karmaError) {
-    console.error('Failed to update karma points', karmaError);
+  // Update volunteer's karma points using the RPC function
+  try {
+    const { error: karmaError } = await supabase.rpc('increment_karma_points', {
+      user_id: user.id,
+      points: karmaPoints
+    });
+    
+    if (karmaError) {
+      console.error('Failed to update karma points', karmaError);
+      // Continue anyway, the request was still completed
+    }
+  } catch (error) {
+    console.error('Failed to update karma points', error);
     // Continue anyway, the request was still completed
   }
 };

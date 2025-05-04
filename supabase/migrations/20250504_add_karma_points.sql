@@ -14,7 +14,6 @@ END;
 $$;
 
 -- Create table to track help request acceptances
--- This allows tracking multiple volunteers accepting the same request
 CREATE TABLE IF NOT EXISTS public.help_request_acceptances (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   help_request_id UUID REFERENCES public.help_requests(id) ON DELETE CASCADE,

@@ -39,6 +39,35 @@ export type Database = {
         }
         Relationships: []
       }
+      help_request_acceptances: {
+        Row: {
+          accepted_at: string | null
+          help_request_id: string | null
+          id: string
+          volunteer_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          help_request_id?: string | null
+          id?: string
+          volunteer_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          help_request_id?: string | null
+          id?: string
+          volunteer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_request_acceptances_help_request_id_fkey"
+            columns: ["help_request_id"]
+            isOneToOne: false
+            referencedRelation: "help_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       help_requests: {
         Row: {
           accepted_at: string | null
@@ -86,6 +115,9 @@ export type Database = {
           full_name: string | null
           id: string
           is_verified: boolean | null
+          is_volunteer: boolean | null
+          karma_points: number | null
+          last_location: unknown | null
           photo_url: string | null
           updated_at: string | null
         }
@@ -96,6 +128,9 @@ export type Database = {
           full_name?: string | null
           id: string
           is_verified?: boolean | null
+          is_volunteer?: boolean | null
+          karma_points?: number | null
+          last_location?: unknown | null
           photo_url?: string | null
           updated_at?: string | null
         }
@@ -106,6 +141,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
+          is_volunteer?: boolean | null
+          karma_points?: number | null
+          last_location?: unknown | null
           photo_url?: string | null
           updated_at?: string | null
         }
@@ -125,9 +163,16 @@ export type Database = {
           full_name: string | null
           id: string
           is_verified: boolean | null
+          is_volunteer: boolean | null
+          karma_points: number | null
+          last_location: unknown | null
           photo_url: string | null
           updated_at: string | null
         }[]
+      }
+      increment_karma_points: {
+        Args: { user_id: string; points: number }
+        Returns: undefined
       }
     }
     Enums: {

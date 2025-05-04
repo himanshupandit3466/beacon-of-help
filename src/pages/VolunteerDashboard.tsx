@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -117,7 +116,7 @@ const VolunteerDashboard = () => {
       <div className="flex flex-col p-6 h-screen bg-white">
         <h1 className="text-2xl font-bold mb-6">Volunteer Dashboard</h1>
         
-        {profile.karma_points !== undefined && (
+        {profile?.karma_points !== undefined && (
           <div className="bg-primary/10 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <div className="bg-primary/20 rounded-full p-2 mr-3">
