@@ -3,50 +3,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { RouteGuard } from '@/components/RouteGuard';
+import { Label } from "@/components/ui/label";
+import { Mail } from "lucide-react";
 
 const Login = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signInWithOTP, signInWithGoogle, signInWithEmailOTP } = useAuth();
-
-  const handlePhoneLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      // Format phone number with country code if not provided
-      const formattedPhone = phoneNumber.startsWith('+') 
-        ? phoneNumber 
-        : `+91${phoneNumber}`; // Assuming India country code
-      
-      // Send OTP
-      await signInWithOTP(formattedPhone);
-      
-      // Navigate to OTP verification page
-      navigate('/verify-otp', { state: { phoneNumber: formattedPhone, isSignup: false } });
-    } catch (error) {
-      // Error is handled in the signInWithOTP function
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { signInWithEmailOTP, signInWithGoogle } = useAuth();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +36,7 @@ const Login = () => {
       
       toast({
         title: "Email Sent",
-        description: "We've sent a magic link to your email. Please check your inbox.",
+        description: "We've sent a magic link to your email. Please check your inbox and spam folders.",
       });
     } catch (error) {
       // Error is handled in the signInWithEmailOTP function
@@ -96,58 +64,34 @@ const Login = () => {
         
         <h1 className="text-2xl font-bold mb-6 text-center">Welcome Back</h1>
         
-        <Tabs defaultValue="phone" className="w-full mb-6">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="phone">Phone</TabsTrigger>
-            <TabsTrigger value="email">Email</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="phone">
-            <form onSubmit={handlePhoneLogin} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone Number</label>
-                <Input 
-                  type="tel" 
-                  placeholder="Enter your phone number" 
-                  value={phoneNumber} 
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                  disabled={loading}
-                />
-                <p className="text-xs text-gray-500">
-                  We'll send you a verification code
-                </p>
+        <form onSubmit={handleEmailLogin} className="space-y-6 mb-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-4 w-4 text-gray-400" />
               </div>
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Continue'}
-              </Button>
-            </form>
-          </TabsContent>
+              <Input 
+                id="email"
+                type="email" 
+                placeholder="Enter your email address" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="pl-10"
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              We'll send you a magic link to sign in
+            </p>
+          </div>
           
-          <TabsContent value="email">
-            <form onSubmit={handleEmailLogin} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email Address</label>
-                <Input 
-                  type="email" 
-                  placeholder="Enter your email address" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-                <p className="text-xs text-gray-500">
-                  We'll send you a magic link
-                </p>
-              </div>
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Continue'}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Sending...' : 'Continue with Email'}
+          </Button>
+        </form>
         
-        <div className="relative my-8">
+        <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
           </div>
@@ -180,7 +124,7 @@ const Login = () => {
               fill="#EA4335" 
             />
           </svg>
-          Sign in with Google
+          Continue with Google
         </Button>
         
         <p className="text-center text-sm text-gray-500">

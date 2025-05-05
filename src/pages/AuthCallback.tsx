@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,12 +7,46 @@ const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check for auth code in the URL
+        // Extract hash parameters for OTP verification
+        const hashParams = new URLSearchParams(location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        // If we have tokens in the URL hash, set the session
+        if (accessToken && refreshToken && type === 'recovery') {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (error) {
+            setError(error.message);
+            toast({
+              title: 'Authentication Error',
+              description: error.message,
+              variant: 'destructive',
+            });
+            return;
+          }
+          
+          if (data?.session) {
+            toast({
+              title: 'Success',
+              description: 'You have been successfully authenticated',
+            });
+            navigate('/home');
+            return;
+          }
+        }
+        
+        // Otherwise, check for active session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -51,7 +84,7 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, toast]);
+  }, [navigate, location, toast]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen p-6 bg-white">
