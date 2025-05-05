@@ -15,13 +15,18 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check for error parameters in the URL
+        // Extract URL parameters and hash fragments
         const searchParams = new URLSearchParams(location.search);
-        const hashParams = new URLSearchParams(location.hash.substring(1));
+        let hashParams: URLSearchParams | null = null;
+        
+        // Check if we have a hash fragment and parse it
+        if (location.hash && location.hash.length > 1) {
+          hashParams = new URLSearchParams(location.hash.substring(1));
+        }
         
         // Handle error in URL parameters (from # or ?)
-        const errorType = searchParams.get('error') || hashParams.get('error');
-        const errorDescription = searchParams.get('error_description') || hashParams.get('error_description');
+        const errorType = searchParams.get('error') || (hashParams && hashParams.get('error'));
+        const errorDescription = searchParams.get('error_description') || (hashParams && hashParams.get('error_description'));
         
         if (errorType) {
           let errorMessage = errorDescription || 'Authentication failed';
@@ -40,50 +45,36 @@ const AuthCallback = () => {
           return;
         }
         
-        // Extract hash parameters for OTP verification
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
-        
-        // If we have tokens in the URL hash, set the session
-        if (accessToken && refreshToken && type === 'recovery') {
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+        // Handle hash parameters for token exchange
+        if (hashParams) {
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const type = hashParams.get('type');
           
-          if (error) {
-            setError(error.message);
-            toast({
-              title: 'Authentication Error',
-              description: error.message,
-              variant: 'destructive',
+          // If we have tokens in the URL hash, set the session
+          if (accessToken && refreshToken) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
             });
-            return;
-          }
-          
-          if (data?.session) {
-            toast({
-              title: 'Success',
-              description: 'You have been successfully authenticated',
-            });
-            navigate('/home');
-            return;
+            
+            if (error) throw error;
+            
+            if (data?.session) {
+              toast({
+                title: 'Success',
+                description: 'You have been successfully authenticated',
+              });
+              navigate('/home');
+              return;
+            }
           }
         }
         
-        // Otherwise, check for active session
+        // Fallback: Check for an active session
         const { data, error } = await supabase.auth.getSession();
         
-        if (error) {
-          setError(error.message);
-          toast({
-            title: 'Authentication Error',
-            description: error.message,
-            variant: 'destructive',
-          });
-          return;
-        }
+        if (error) throw error;
         
         if (data?.session) {
           toast({
