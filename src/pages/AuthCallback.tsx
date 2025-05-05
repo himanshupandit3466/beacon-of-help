@@ -1,7 +1,9 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
@@ -13,8 +15,32 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Extract hash parameters for OTP verification
+        // Check for error parameters in the URL
+        const searchParams = new URLSearchParams(location.search);
         const hashParams = new URLSearchParams(location.hash.substring(1));
+        
+        // Handle error in URL parameters (from # or ?)
+        const errorType = searchParams.get('error') || hashParams.get('error');
+        const errorDescription = searchParams.get('error_description') || hashParams.get('error_description');
+        
+        if (errorType) {
+          let errorMessage = errorDescription || 'Authentication failed';
+          
+          if (errorType === 'access_denied' && errorDescription?.includes('expired')) {
+            errorMessage = 'The magic link has expired. Please request a new one.';
+          }
+          
+          setError(errorMessage);
+          toast({
+            title: 'Authentication Error',
+            description: errorMessage,
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Extract hash parameters for OTP verification
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const type = hashParams.get('type');
@@ -77,7 +103,6 @@ const AuthCallback = () => {
           description: err.message || 'Authentication failed',
           variant: 'destructive',
         });
-        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -101,12 +126,12 @@ const AuthCallback = () => {
           </div>
           <h2 className="text-xl font-semibold mb-2">Authentication Failed</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <button 
+          <Button 
             onClick={() => navigate('/login')}
-            className="text-primary hover:underline"
+            className="text-primary"
           >
             Return to Login
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>
