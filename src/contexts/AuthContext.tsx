@@ -11,6 +11,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signInWithOTP: (phoneNumber: string) => Promise<void>;
+  signInWithEmailOTP: (email: string, data?: Record<string, any>) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (profile: Partial<Profile>) => Promise<void>;
@@ -108,6 +109,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithEmailOTP = async (email: string, data?: Record<string, any>) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data
+        }
+      });
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Magic Link Sent',
+        description: 'Please check your email for the magic link',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send magic link',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const signInWithGoogle = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -189,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     loading,
     signInWithOTP,
+    signInWithEmailOTP,
     signInWithGoogle,
     signOut,
     updateProfile,

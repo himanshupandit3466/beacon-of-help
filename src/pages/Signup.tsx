@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,13 +11,14 @@ import { RouteGuard } from '@/components/RouteGuard';
 
 const Signup = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithEmailOTP } = useAuth();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handlePhoneSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -77,6 +79,53 @@ const Signup = () => {
     }
   };
 
+  const handleEmailSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Send magic link to email with user data
+      await signInWithEmailOTP(email, {
+        full_name: name
+      });
+      
+      // Store user data temporarily
+      localStorage.setItem('helpin_temp_user', JSON.stringify({ email, name }));
+      
+      toast({
+        title: "Email Sent",
+        description: "We've sent a magic link to your email. Please check your inbox."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Signup Failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignup = async () => {
     try {
       await signInWithGoogle();
@@ -100,7 +149,7 @@ const Signup = () => {
         
         <h1 className="text-2xl font-bold mb-6 text-center">Create Account</h1>
         
-        <form onSubmit={handleSignup} className="space-y-6">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <label className="text-sm font-medium">Full Name</label>
             <Input 
@@ -111,27 +160,60 @@ const Signup = () => {
               disabled={loading}
             />
           </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Phone Number</label>
-            <Input 
-              type="tel" 
-              placeholder="Enter your phone number" 
-              value={phoneNumber} 
-              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-500">
-              We'll send you a verification code
-            </p>
-          </div>
-          
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Processing...' : 'Continue'}
-          </Button>
-        </form>
+        </div>
         
-        <div className="relative my-8">
+        <Tabs defaultValue="phone" className="w-full mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="phone">Phone</TabsTrigger>
+            <TabsTrigger value="email">Email</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="phone">
+            <form onSubmit={handlePhoneSignup} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone Number</label>
+                <Input 
+                  type="tel" 
+                  placeholder="Enter your phone number" 
+                  value={phoneNumber} 
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  We'll send you a verification code
+                </p>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Processing...' : 'Continue'}
+              </Button>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="email">
+            <form onSubmit={handleEmailSignup} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email Address</label>
+                <Input 
+                  type="email" 
+                  placeholder="Enter your email address" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  We'll send you a magic link
+                </p>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Processing...' : 'Continue'}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
           </div>

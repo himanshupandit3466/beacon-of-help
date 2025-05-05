@@ -3,18 +3,20 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { RouteGuard } from '@/components/RouteGuard';
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signInWithOTP, signInWithGoogle } = useAuth();
+  const { signInWithOTP, signInWithGoogle, signInWithEmailOTP } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!phoneNumber || phoneNumber.length < 10) {
@@ -46,6 +48,35 @@ const Login = () => {
     }
   };
 
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Send magic link to email
+      await signInWithEmailOTP(email);
+      
+      toast({
+        title: "Email Sent",
+        description: "We've sent a magic link to your email. Please check your inbox.",
+      });
+    } catch (error) {
+      // Error is handled in the signInWithEmailOTP function
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     try {
       await signInWithGoogle();
@@ -65,25 +96,56 @@ const Login = () => {
         
         <h1 className="text-2xl font-bold mb-6 text-center">Welcome Back</h1>
         
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Phone Number</label>
-            <Input 
-              type="tel" 
-              placeholder="Enter your phone number" 
-              value={phoneNumber} 
-              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-500">
-              We'll send you a verification code
-            </p>
-          </div>
+        <Tabs defaultValue="phone" className="w-full mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="phone">Phone</TabsTrigger>
+            <TabsTrigger value="email">Email</TabsTrigger>
+          </TabsList>
           
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Processing...' : 'Continue'}
-          </Button>
-        </form>
+          <TabsContent value="phone">
+            <form onSubmit={handlePhoneLogin} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone Number</label>
+                <Input 
+                  type="tel" 
+                  placeholder="Enter your phone number" 
+                  value={phoneNumber} 
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  We'll send you a verification code
+                </p>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Processing...' : 'Continue'}
+              </Button>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="email">
+            <form onSubmit={handleEmailLogin} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email Address</label>
+                <Input 
+                  type="email" 
+                  placeholder="Enter your email address" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  We'll send you a magic link
+                </p>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Processing...' : 'Continue'}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
         
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
